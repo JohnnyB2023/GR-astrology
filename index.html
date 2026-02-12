@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="el">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Αστρολογία Pro – Γενέθλιος, Συναστρία & SVG Χάρτης</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #05070a;
+      --card: rgba(13, 17, 23, 0.8);
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --good: #10b981;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+      --glass: rgba(255, 255, 255, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 40px 20px;
+      text-align: center;
+      background: linear-gradient(to bottom, rgba(99, 102, 241, 0.05), transparent);
+    }
+
+    header h1 {
+      margin: 0;
+      font-weight: 800;
+      font-size: 2.8rem;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #fff 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 30px;
+      padding: 0 30px 50px;
+    }
+
+    .glass-card {
+      background: var(--card);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px 18px;
+      color: #fff;
+      border-radius: 14px;
+      font-size: 15px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.08);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.3s;
+      background: var(--glass);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      box-shadow: 0 8px 25px var(--accent-glow);
+      border: none;
+    }
+
+    button.primary:hover {
+      box-shadow: 0 12px 30px var(--accent-glow);
+      filter: brightness(1.15);
+    }
+
+    .tabs-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 30px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 18px;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-radius: 12px;
+      font-size: 13px;
+      transition: all 0.3s;
+      color: var(--muted);
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+
+    .tab:hover:not(.active) {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+      animation: slideUp 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      margin-top: 10px;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 20px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td {
+      padding: 18px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+    }
+
+    td:first-child {
+      border-radius: 15px 0 0 15px;
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    td:last-child {
+      border-radius: 0 15px 15px 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.good {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .badge.bad {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .search-btn {
+      background: var(--accent);
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+    }
+
+    #bio-bars h3 {
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+      color: #fff;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .modal-content ol {
+      padding-left: 20px;
+    }
+
+    .modal-content li {
+      margin-bottom: 15px;
+      color: var(--text);
+    }
+
+    .modal-content b {
+      color: var(--accent);
+    }
+
+    .modal-close {
+      margin-top: 25px;
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      main {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      header h1 {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>GR Astrology Pro</h1>
+    <p style="color:var(--muted); margin-top:10px;">Ψυχοσωματική Ανάλυση & Συμβατότητα</p>
+  </header>
+
+  <main>
+    <aside class="glass-card">
+      <div class="tabs-container" style="background: none; padding: 0;">
+        <div class="tab active" data-sec="sidebar-natal" style="flex:1; text-align:center;">Γενέθλιος</div>
+        <div class="tab" data-sec="sidebar-synastry" style="flex:1; text-align:center;">Συναστρία</div>
+      </div>
+
+      <div id="sidebar-natal" class="section active">
+        <h3 style="margin-top:0;">Στοιχεία Ατόμου</h3>
+        <div class="form-group">
+          <label>Ημερομηνία (DD/MM/YYYY)</label>
+          <input type="text" id="d1" placeholder="π.χ. 02/09/1967" value="02/09/1967"
+            title="Εισάγετε ημερομηνία σε μορφή ΗΗ/ΜΜ/ΕΕΕΕ">
+        </div>
+        <div class="form-group">
+          <label>Ώρα (24h Style - HH:MM)</label>
+          <input type="text" id="t1" placeholder="π.χ. 05:15" value="05:15" title="Εισάγετε ώρα σε μορφή ΩΩ:ΛΛ">
+        </div>
+        <div class="form-group">
+          <label>Πόλη / Τοποθεσία</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="city1" placeholder="ΑΘΗΝΑ" value="MELBOURNE" title="Εισάγετε πόλη">
+            <button class="search-btn" onclick="geo('city1','lat1','lon1','elev1')"
+              title="Αναζήτηση συντεταγμένων">🔍</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; font-size:12px; margin-bottom:15px;">
+          <div style="flex:1;"><label>Lat</label><input type="text" id="lat1" value="-37.8142"
+              title="Γεωγραφικό πλάτος"></div>
+          <div style="flex:1;"><label>Lon</label><input type="text" id="lon1" value="144.9632" title="Γεωγραφικό μήκος">
+          </div>
+        </div>
+      </div>
+
+      <div id="sidebar-synastry" class="section">
+        <h3 style="margin-top:0;">Στοιχεία 2ου Ατόμου</h3>
+        <div class="form-group">
+          <label>Ημερομηνία (DD/MM/YYYY)</label>
+          <input type="text" id="d2" placeholder="DD/MM/YYYY" title="Ημερομηνία 2ου ατόμου">
+        </div>
+        <div class="form-group">
+          <label>Ώρα (HH:MM)</label>
+          <input type="text" id="t2" placeholder="HH:MM" title="Ώρα 2ου ατόμου">
+        </div>
+        <div class="form-group">
+          <label>Πόλη / Τοποθεσία</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="city2" placeholder="Πόλη" title="Πόλη 2ου ατόμου">
+            <button class="search-btn" onclick="geo('city2','lat2','lon2','elev2')" title="Αναζήτηση">🔍</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; font-size:12px;">
+          <div style="flex:1;"><label>Lat</label><input type="text" id="lat2" title="Πλάτος 2"></div>
+          <div style="flex:1;"><label>Lon</label><input type="text" id="lon2" title="Μήκος 2"></div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:20px;">
+        <label>Σύστημα Οίκων</label>
+        <select id="hsys" title="Επιλογή συστήματος οίκων">
+          <option value="equal">Equal House (Ίσοι)</option>
+          <option value="porphyry">Porphyry</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary" onclick="calculate()">Υπολογισμός</button>
+        <button onclick="demo()">Demo</button>
+      </div>
+      <button style="margin-top:12px; width:100%; border-color:var(--accent); color:var(--accent);"
+        onclick="toggleModal(true)">Οδηγίες Χρήσης</button>
+    </aside>
+
+    <section class="glass-card" style="flex:1;">
+      <div class="tabs-container">
+        <div class="tab active" data-sec="tab-planets">Πλανήτες</div>
+        <div class="tab" data-sec="tab-houses">Οίκοι</div>
+        <div class="tab" data-sec="tab-wheel">Χάρτης (SVG)</div>
+        <div class="tab" data-sec="tab-aspects">Όψεις</div>
+        <div class="tab" data-sec="tab-reports">Αναλυτική Αναφορά</div>
+        <div class="tab" data-sec="tab-forecast">Μηνιαία Πρόβλεψη</div>
+      </div>
+
+      <div id="status" style="margin-bottom:20px; font-weight:700; color:var(--accent); min-height:24px;"></div>
+
+      <div id="tab-planets" class="section active">
+        <div id="out-planets"></div>
+      </div>
+
+      <div id="tab-houses" class="section">
+        <div id="out-houses"></div>
+      </div>
+
+      <div id="tab-wheel" class="section" style="text-align:center;">
+        <svg id="astroWheel" viewBox="0 0 500 500" style="max-width:600px; width:100%; height:auto;"></svg>
+      </div>
+
+      <div id="tab-aspects" class="section">
+        <div id="out-aspects"></div>
+      </div>
+
+      <div id="tab-reports" class="section">
+        <button id="pdfBtn" style="margin-bottom:25px; width:auto; padding:12px 30px; display:none;" class="primary"
+          onclick="exportPDF()">Εξαγωγή σε PDF</button>
+        <div id="out-reports" style="line-height:2.0;"></div>
+      </div>
+
+      <div id="tab-forecast" class="section">
+        <div id="bio-bars" style="margin-bottom:40px;"></div>
+        <div id="out-forecast" style="line-height:2.0;"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Instructions -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom:20px;">Οδηγίες Χρήσης</h2>
+      <ol>
+        <li><b>Επιλογή Λειτουργίας:</b> Επιλέξτε "Γενέθλιος" (ατομικό) ή "Συναστρία" (σχέση).</li>
+        <li><b>Εισαγωγή Ημερομηνίας:</b> Χρησιμοποιήστε τη μορφή DD/MM/YYYY (π.χ. 15/05/1990).</li>
+        <li><b>Εισαγωγή Ώρας:</b> Χρησιμοποιήστε τη μορφή HH:MM (π.χ. 14:30).</li>
+        <li><b>Τοποθεσία:</b> Γράψτε την πόλη και πατήστε 🔍 για να βρεθούν οι συντεταγμένες.</li>
+        <li><b>Υπολογισμός:</b> Πατήστε το κουμπί για να δείτε την ανάλυση.</li>
+        <li><b>Αποτελέσματα:</b> Περιηγηθείτε στις καρτέλες για χάρτη, όψεις και αναφορά.</li>
+      </ol>
+      <button class="primary modal-close" onclick="toggleModal(false)">Κλείσιμο</button>
+    </div>
+  </div>
+
+  <script>
+    const ZODIAC = ["Κριός", "Ταύρος", "Δίδυμοι", "Καρκίνος", "Λέων", "Παρθένος", "Ζυγός", "Σκορπιός", "Τοξότης", "Αιγόκερως", "Υδροχόος", "Ιχθύες"];
+    const ZODIAC_DESC = {
+      "Κριός": "Δυναμισμός, πρωτοβουλία, θάρρος, παρορμητικότητα.",
+      "Ταύρος": "Σταθερότητα, πρακτικότητα, αισθησιασμός, επιμονή.",
+      "Δίδυμοι": "Επικοινωνία, περιέργεια, προσαρμοστικότητα, ευφυΐα.",
+      "Καρκίνος": "Ευαισθησία, προστασία, οικογένεια, συναίσθημα.",
+      "Λέων": "Δημιουργικότητα, αυτοπεποίθηση, ηγετικότητα, γενναιοδωρία.",
+      "Παρθένος": "Λεπτομέρεια, ανάλυση, προσφορά, οργάνωση.",
+      "Ζυγός": "Αρμονία, σχέσεις, δικαιοσύνη, διπλωματία.",
+      "Σκορπιός": "Πάθος, βάθος, μεταμόρφωση, ένταση.",
+      "Τοξότης": "Περιπέτεια, φιλοσοφία, αισιοδοξία, ελευθερία.",
+      "Αιγόκερως": "Φιλοδοξία, πειθαρχία, δομή, ωριμότητα.",
+      "Υδροχόος": "Πρωτοτυπία, ανθρωπισμός, ανεξαρτησία, επανάσταση.",
+      "Ιχθύες": "Διαίσθηση, συμπόνια, φαντασία, πνευματικότητα."
+    };
+
+    function toggleModal(show) {
+      const modal = document.getElementById('helpModal');
+      if (show) modal.classList.add('active');
+      else modal.classList.remove('active');
+    }
+    // Close modal on overlay click
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('helpModal');
+      if (e.target === modal) toggleModal(false);
+    });
+    const HOUSE_DESC = [
+      "Ο Εαυτός, η προσωπικότητα και η εξωτερική εμφάνιση.",
+      "Υλικά αγαθά, αξίες και προσωπική ασφάλεια.",
+      "Επικοινωνία, αδέρφια, μάθηση και κοντινές μετακινήσεις.",
+      "Ρίζες, οικογένεια, το σπίτι και η ψυχολογική βάση.",
+      "Δημιουργικότητα, έρωτας, παιδιά και διασκέδαση.",
+      "Εργασία, καθημερινότητα, υγεία και προσφορά.",
+      "Συνεργασίες, γάμος/σχέσεις και φανεροί εχθροί.",
+      "Κοινά πόροι, μεταμόρφωση, μυστήριο και βάθος.",
+      "Φιλοσοφία, ανώτερη γνώση, ταξίδια και πίστη.",
+      "Καριέρα, κοινωνική αναγνώριση και δημόσια εικόνα.",
+      "Φίλοι, κοινωνικές ομάδες, στόχοι και ελπίδες.",
+      "Υποσυνείδητο, απομόνωση, πνευματικότητα και κρυφοί εχθροί."
+    ];
+    const PLANETS_DEFS = [
+      { id: "Sun", name: "Ήλιος", desc: "Η ουσία, η θέληση και το Εγώ." },
+      { id: "Moon", name: "Σελήνη", desc: "Συναίσθημα, ένστικτο και εσωτερικός κόσμος." },
+      { id: "Mercury", name: "Ερμής", desc: "Επικοινωνία, σκέψη και λογική." },
+      { id: "Venus", name: "Αφροδίτη", desc: "Αγάπη, ομορφιά, αξίες και σχέσεις." },
+      { id: "Mars", name: "Άρης", desc: "Δράση, ενέργεια, πάθος και διεκδίκηση." },
+      { id: "Jupiter", name: "Δίας", desc: "Επέκταση, τύχη, φιλοσοφία και γνώση." },
+      { id: "Saturn", name: "Κρόνος", desc: "Δομή, ευθύνη, όρια και μαθήματα." },
+      { id: "Uranus", name: "Ουρανός", desc: "Ελευθερία, αλλαγή, επανάσταση και πρωτοτυπία." },
+      { id: "Neptune", name: "Ποσειδώνας", desc: "Όνειρα, διαίσθηση, πνευματικότητα." },
+      { id: "Pluto", name: "Πλούτωνας", desc: "Μεταμόρφωση, δύναμη και αναγέννηση." }
+    ];
+
+    const ASPECTS_DEFS = [
+      { name: "Σύνοδος (0°)", ang: 0, orb: 8, icon: "☌", desc: "Ένωση ενεργειών." },
+      { name: "Εξάγωνο (60°)", ang: 60, orb: 6, icon: "⚹", desc: "Ευκαιρίες και αρμονία." },
+      { name: "Τετράγωνο (90°)", ang: 90, orb: 7, icon: "□", desc: "Πίεση και πρόκληση." },
+      { name: "Τρίγωνο (120°)", ang: 120, orb: 8, icon: "△", desc: "Ροή και φυσικά ταλέντα." },
+      { name: "Αντίθεση (180°)", ang: 180, orb: 7, icon: "☍", desc: "Πόλωση και ισορροπία." }
+    ];
+
+    let currentMode = 'natal';
+
+    // TAB SWITCHING Logic
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        const secId = t.getAttribute('data-sec');
+        if (!secId) return;
+
+        if (secId.startsWith('sidebar-')) {
+          document.querySelectorAll('aside .tab').forEach(x => x.classList.remove('active'));
+          document.querySelectorAll('aside .section').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          const target = document.getElementById(secId);
+          if (target) target.classList.add('active');
+        } else {
+          document.querySelectorAll('section.glass-card .tab').forEach(x => x.classList.remove('active'));
+          document.querySelectorAll('section.glass-card .section').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          const target = document.getElementById(secId);
+          if (target) target.classList.add('active');
+        }
+      });
+    });
+
+    function parseDateTime(d, t) {
+      if (!d) return NaN;
+      const parts = d.split('/');
+      if (parts.length !== 3) return new Date(d); // Fallback
+      const iso = `${parts[2]}-${parts[1]}-${parts[0]}T${t || '12:00'}`;
+      return new Date(iso);
+    }
+
+    async function geo(cityId, latId, lonId, elevId) {
+      const city = document.getElementById(cityId).value;
+      if (!city) return;
+      document.getElementById('status').innerText = "Αναζήτηση συντεταγμένων...";
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
+        const data = await res.json();
+        if (data.length > 0) {
+          document.getElementById(latId).value = parseFloat(data[0].lat).toFixed(4);
+          document.getElementById(lonId).value = parseFloat(data[0].lon).toFixed(4);
+          document.getElementById('status').innerText = `Τοποθεσία: ${data[0].display_name}`;
+        }
+      } catch (e) { document.getElementById('status').innerText = "Σφάλμα γεωεντοπισμού."; }
+    }
+
+    function calculate() {
+      const out = document.getElementById('status');
+      if (typeof Astronomy === 'undefined') {
+        out.innerHTML = "<span class='badge bad'>Σφάλμα:</span> Η βιβλιοθήκη Astronomy δεν φορτώθηκε.";
+        return;
+      }
+
+      try {
+        const d1v = document.getElementById('d1').value;
+        const t1v = document.getElementById('t1').value;
+        const date1 = parseDateTime(d1v, t1v);
+
+        if (isNaN(date1.getTime())) {
+          out.innerText = "Μη έγκυρη ημερομηνία/ώρα (DD/MM/YYYY HH:MM).";
+          return;
+        }
+
+        const lat1 = parseFloat(document.getElementById('lat1').value) || 0;
+        const lon1 = parseFloat(document.getElementById('lon1').value) || 0;
+        const sys = document.getElementById('hsys').value;
+
+        out.innerHTML = "<span class='badge' style='background:rgba(255,255,255,0.1)'>Υπολογισμός...</span>";
+
+        const p1 = getPlanetData(date1);
+        const h1 = getHouses(date1, lat1, lon1, sys);
+
+        const isSynastry = document.getElementById('sidebar-synastry').classList.contains('active');
+        if (!isSynastry) {
+          renderNatal(p1, h1);
+          renderForecast(date1);
+          out.innerText = "Ολοκληρώθηκε: Γενέθλιος χάρτης.";
+        } else {
+          const d2v = document.getElementById('d2').value;
+          const t2v = document.getElementById('t2').value;
+          const date2 = parseDateTime(d2v, t2v);
+        }
+      } catch (err) {
+        console.error(err);
+        out.innerHTML = `<span class='badge bad'>Σφάλμα:</span> ${err.message}`;
+      }
+    }
+
+    function norm(a) { let x = a % 360; return x < 0 ? x + 360 : x; }
+    function degToSign(d) {
+      let a = norm(d);
+      let idx = Math.floor(a / 30);
+      return { idx, name: ZODIAC[idx], deg: (a % 30).toFixed(2) };
+    }
+
+    function getRetro(body, date) {
+      if (body === "Sun" || body === "Moon") return false;
+      const l1 = Astronomy.EclipticLongitude(Astronomy.Body[body], date);
+      const l2 = Astronomy.EclipticLongitude(Astronomy.Body[body], new Date(date.getTime() + 12 * 3600 * 1000));
+      let diff = l2 - l1;
+      if (diff > 180) diff -= 360; if (diff < -180) diff += 360;
+      return diff < 0;
+    }
+
+    function getHouses(date, lat, lon, sys) {
+      const eps = 23.43929 * Math.PI / 180;
+      const astTime = Astronomy.MakeTime(date);
+      const sid = Astronomy.SiderealTime(astTime);
+      const ramc = norm((sid * 15) + lon);
+      const ramcRad = ramc * Math.PI / 180;
+      const phiRad = lat * Math.PI / 180;
+
+      let mc = Math.atan2(Math.sin(ramcRad), Math.cos(ramcRad) * Math.cos(eps)) * 180 / Math.PI;
+      mc = norm(mc);
+      let asc = Math.atan2(Math.cos(ramcRad), -Math.sin(ramcRad) * Math.cos(eps) - Math.tan(phiRad) * Math.sin(eps)) * 180 / Math.PI;
+      asc = norm(asc);
+
+      let cusps = [];
+      if (sys === 'equal') {
+        for (let i = 0; i < 12; i++) cusps.push(norm(asc + i * 30));
+      } else {
+        let h10 = mc, h1 = asc;
+        let d1 = norm(h1 - h10);
+        let s1 = d1 / 3, s2 = (360 - d1) / 3;
+        cusps = [h1, norm(h1 + s2), norm(h1 + 2 * s2), norm(h10 + 180), norm(h10 + 180 + s1), norm(h10 + 180 + 2 * s1)];
+        for (let i = 0; i < 6; i++) cusps.push(norm(cusps[i] + 180));
+      }
+      return { asc, mc, cusps };
+    }
+
+    function getPlanetData(date) {
+      return PLANETS_DEFS.map(p => {
+        let lon;
+        try {
+          if (p.id === "Sun") {
+            const sun = (typeof Astronomy.SunPosition === 'function')
+              ? Astronomy.SunPosition(date)
+              : Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Sun, date, true));
+            lon = sun.elon;
+          } else if (p.id === "Moon") {
+            lon = Astronomy.Ecliptic(Astronomy.GeoMoon(date)).elon;
+          } else {
+            lon = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body[p.id], date, true)).elon;
+          }
+        } catch (e) {
+          console.error("Error for body " + p.id, e);
+          lon = 0;
+        }
+        return { ...p, lon, r: getRetro(p.id, date) };
+      });
+    }
+
+    function demo() {
+      document.getElementById('d1').value = "02/09/1967";
+      document.getElementById('t1').value = "05:15";
+      document.getElementById('city1').value = "MELBOURNE";
+      document.getElementById('lat1').value = "-37.8142";
+      document.getElementById('lon1').value = "144.9632";
+      calculate();
+    }
+
+    function renderNatal(planets, houses) {
+      let html = `<table><tr><th>Πλανήτης</th><th>Θέση</th><th>Ζώδιο</th></tr>`;
+      planets.forEach(p => {
+        const s = degToSign(p.lon);
+        html += `<tr><td title="${p.desc}">${p.name}${p.r ? ' <span class="badge bad" title="Ανάδρομος">R</span>' : ''}</td><td>${s.deg}°</td><td><span class="badge good" title="${ZODIAC_DESC[s.name]}">${s.name}</span></td></tr>`;
+      });
+      document.getElementById('out-planets').innerHTML = html + "</table>";
+
+      let hHtml = `<table><tr><th>Οίκος</th><th>Ακμή</th><th>Ζώδιο</th></tr>`;
+      houses.cusps.forEach((c, i) => {
+        const s = degToSign(c);
+        hHtml += `<tr><td title="${HOUSE_DESC[i]}">Οίκος ${i + 1}</td><td>${s.deg}°</td><td><span class="badge good" title="${ZODIAC_DESC[s.name]}">${s.name}</span></td></tr>`;
+      });
+      document.getElementById('out-houses').innerHTML = hHtml + "</table>";
+
+      const aspects = renderAspects(planets);
+      drawWheel(planets, houses);
+      renderReports(planets, houses, aspects);
+
+      const d1v = document.getElementById('d1').value;
+      if (d1v) renderForecast(new Date(d1v));
+    }
+
+    function renderSynastry(p1, p2) {
+      let html = `<table><tr><th>Α1 - Α2</th><th>Όψη</th><th>Ορμπη</th></tr>`;
+      let synAspects = [];
+      p1.forEach(a => {
+        p2.forEach(b => {
+          let dist = Math.abs(norm(a.lon) - norm(b.lon));
+          if (dist > 180) dist = 360 - dist;
+          ASPECTS_DEFS.forEach(asp => {
+            let diff = Math.abs(dist - asp.ang);
+            if (diff <= asp.orb) {
+              html += `<tr><td><b>${a.name}-${b.name}</b></td><td title="${asp.desc}">${asp.icon} ${asp.name}</td><td>${diff.toFixed(1)}°</td></tr>`;
+              synAspects.push({ a, b, asp });
+            }
+          });
+        });
+      });
+      document.getElementById('out-aspects').innerHTML = html + "</table>";
+      document.getElementById('status').innerText = "Συναστρία Υπολογίστηκε Επιτυχώς.";
+      renderReports(p1, null, synAspects, p2);
+    }
+
+    function renderAspects(planets) {
+      let html = `<table><tr><th>Ζεύγος</th><th>Όψη</th><th>Ορμπη</th></tr>`;
+      let aspectList = [];
+      for (let i = 0; i < planets.length; i++) {
+        for (let j = i + 1; j < planets.length; j++) {
+          let dist = Math.abs(norm(planets[i].lon) - norm(planets[j].lon));
+          if (dist > 180) dist = 360 - dist;
+          ASPECTS_DEFS.forEach(asp => {
+            let diff = Math.abs(dist - asp.ang);
+            if (diff <= asp.orb) {
+              const row = `<tr><td>${planets[i].name}-${planets[j].name}</td><td title="${asp.desc}">${asp.icon} ${asp.name}</td><td>${diff.toFixed(1)}°</td></tr>`;
+              html += row;
+              aspectList.push({ p1: planets[i], p2: planets[j], asp });
+            }
+          });
+        }
+      }
+      document.getElementById('out-aspects').innerHTML = html + "</table>";
+      return aspectList;
+    }
+
+    function renderReports(planets, houses, aspects, synastryP2 = null) {
+      const out = document.getElementById('out-reports');
+      const pdfBtn = document.getElementById('pdfBtn');
+      let html = "";
+
+      if (synastryP2) {
+        html += `<h3 style="color:var(--accent); text-align:center;">Αναφορά Συμβατότητας (Συναστρία)</h3>`;
+        html += `<p>Η σύγκριση των δύο χαρτών αποκαλύπτει μια μοναδική δυναμική μεταξύ δύο ψυχικών κόσμων. </p>`;
+        html += `<p>Παρατηρούμε πώς οι ανάγκες του ενός ατόμου (Σελήνη) συναντούν τις αξίες του άλλου (Αφροδίτη) και πώς η επικοινωνία (Ερμής) γεφυρώνει τις διαφορές τους. Οι όψεις που έχουν εντοπιστεί στον παραπάνω πίνακα δείχνουν τα σημεία έντασης και τα σημεία αρμονίας που θα καθορίσουν την πορεία αυτής της σχέσης.</p>`;
+      } else {
+        const pMap = {};
+        planets.forEach(p => pMap[p.id] = p);
+        const sunS = degToSign(pMap.Sun.lon);
+        const moonS = degToSign(pMap.Moon.lon);
+        const ascS = degToSign(houses.asc);
+
+        html += `<div id="print-area">`;
+        html += `<h3 style="color:#000; text-align:center; border-bottom:2px solid #333; padding-bottom:10px;" class="pdf-title">Ψυχοσωματικό Προφίλ & Ανάλυση Προσωπικότητας</h3>`;
+
+        html += `<h4 style="color:#222;">1. Ο Πυρήνας της Ύπαρξης</h4>`;
+        html += `<p>Η ταυτότητά σας δομείται πάνω στην τριπλέτα Ήλιου, Σελήνης και Ωροσκόπου. Με τον <b>Ήλιο στον ${sunS.name}</b>, η ζωτική σας ενέργεια χαρακτηρίζεται από ${ZODIAC_DESC[sunS.name].toLowerCase()} Είναι ο τρόπος που λάμπετε και ο σκοπός της θέλησής σας.</p>`;
+        html += `<p>Ο <b>Ωροσκόπος στον ${ascS.name}</b> λειτουργεί ως η "μάσκα" ή το σώμα σας προς τον έξω κόσμο, προσδίδοντας μια αίσθηση ${ZODIAC_DESC[ascS.name].toLowerCase()}</p>`;
+        html += `<p>Σε ένα βαθύτερο επίπεδο, η <b>Σελήνη στον ${moonS.name}</b> καθορίζει τις εσωτερικές σας ανάγκες και τον ψυχισμό σας. Η ανάγκη σας για ασφάλεια εκφράζεται μέσα από ${ZODIAC_DESC[moonS.name].toLowerCase()}</p>`;
+
+        html += `<h4 style="color:#222;">2. Επικοινωνία, Συναίσθημα & Σωματική Ενέργεια</h4>`;
+        const mercS = degToSign(pMap.Mercury.lon);
+        const venS = degToSign(pMap.Venus.lon);
+        const marsS = degToSign(pMap.Mars.lon);
+        html += `<p>Ο τρόπος που σκέφτεστε και επικοινωνείτε (<b>Ερμής στον ${mercS.name}</b>) είναι ${ZODIAC_DESC[mercS.name].toLowerCase()} γεγονός που καθορίζει την πνευματική σας ευκινησία. </p>`;
+        html += `<p>Στον τομέα των αξιών και της αγάπης, η <b>Αφροδίτη στον ${venS.name}</b> υποδηλώνει ότι αναζητάτε ${ZODIAC_DESC[venS.name].toLowerCase()} Η δράση και η διεκδίκησή σας (<b>Άρης στον ${marsS.name}</b>) τροφοδοτούνται από ${ZODIAC_DESC[marsS.name].toLowerCase()} επηρεάζοντας άμεσα τη σωματική σας αντοχή.</p>`;
+
+        html += `<h4 style="color:#222;">3. Κοινωνική Ενσωμάτωση & Μαθήματα Ωριμότητας</h4>`;
+        const jupS = degToSign(pMap.Jupiter.lon);
+        const satS = degToSign(pMap.Saturn.lon);
+        html += `<p>Η αίσθηση της τύχης και της επέκτασης (<b>Δίας στον ${jupS.name}</b>) έρχεται όταν αγκαλιάζετε ${ZODIAC_DESC[jupS.name].toLowerCase()}</p>`;
+        html += `<p>Αντίθετα, ο <b>Κρόνος στον ${satS.name}</b> υποδεικνύει το πεδίο όπου η ζωή σας δοκιμάζει. Εκεί καλείστε να δείξετε πειθαρχία και να χτίσετε σταθερές βάσεις μέσα από ${ZODIAC_DESC[satS.name].toLowerCase()}</p>`;
+
+        html += `<h4 style="color:#222;">4. Υπερβατικές Επιρροές & Συλλογικό Ασυνείδητο</h4>`;
+        const uraS = degToSign(pMap.Uranus.lon);
+        const nepS = degToSign(pMap.Neptune.lon);
+        const pluS = degToSign(pMap.Pluto.lon);
+        html += `<p>Οι εξώτεροι πλανήτες συνδέουν την προσωπικότητά σας με τις τάσεις της εποχής σας. Ο <b>Ουρανός στον ${uraS.name}</b> φέρνει ξαφνικές αλλαγές και καινοτομία, ο <b>Ποσειδώνας στον ${nepS.name}</b> αγγίζει τη διαίσθησή σας, και ο <b>Πλούτωνας στον ${pluS.name}</b> ωθεί σε βαθιές εσωτερικές μεταμορφώσεις.</p>`;
+
+        html += `<h4 style="color:#222;">5. Εσωτερικοί Διάλογοι & Ψυχολογικές Πτυχές</h4>`;
+        if (aspects.length > 0) {
+          html += `<p>Οι αστρολογικές όψεις δεν είναι απλά γεωμετρικά σχήματα, αλλά ένας "διάλογος" μεταξύ των πλανητών σας. </p>`;
+          aspects.forEach(a => {
+            let tone = "";
+            if (a.asp.ang === 120 || a.asp.ang === 60) tone = "υπάρχει μια φυσική ροή βοήθειας, όπου ο ένας πλανήτης ενισχύει τον άλλον.";
+            else if (a.asp.ang === 90 || a.asp.ang === 180) tone = "υπάρχει μια δημιουργική ένταση που σας σπρώχνει σε δράση και ξεπέρασμα εμποδίων.";
+            else tone = "υπάρχει μια απόλυτη ένωση ενεργειών.";
+
+            html += `<p>Στη σχέση του <b>${a.p1.name} με τον ${a.p2.name}</b>, ${tone} Συγκεκριμένα, ${a.asp.desc.replace(".", "")}.</p>`;
+          });
+        } else {
+          html += `<p>Ο χάρτης σας χαρακτηρίζεται από μια σταθερή, αδιατάρακτη ροή ενεργειών, χωρίς έντονες εσωτερικές συγκρούσεις.</p>`;
+        }
+
+        html += `<p style="margin-top:20px; font-style:italic; border-top:1px solid #333; padding-top:10px; color:#555;">Η ανάλυση αυτή είναι μια πυξίδα για την αυτογνωσία σας. Χρησιμοποιήστε την ως πηγή έμπνευσης για την προσωπική σας εξέλιξη.</p>`;
+        html += `</div>`;
+      }
+      out.innerHTML = html;
+      pdfBtn.style.display = 'block';
+    }
+
+    function renderForecast(birthDate) {
+      const now = new Date();
+      const diffDays = Math.floor((now - birthDate) / (1000 * 60 * 60 * 24));
+
+      // Biorhythms
+      const p = Math.sin(2 * Math.PI * diffDays / 23) * 100;
+      const e = Math.sin(2 * Math.PI * diffDays / 28) * 100;
+      const i = Math.sin(2 * Math.PI * diffDays / 33) * 100;
+
+      const createBar = (label, val, color) => {
+        const isPos = val >= 0;
+        const width = Math.abs(val) / 2; // half because 0-100 fits in 50%
+        return `
+                <div style="margin:15px 0;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>${label}</span>
+                        <span style="color:${isPos ? 'var(--good)' : '#ff4d4d'}; font-weight:bold;">${val.toFixed(0)}%</span>
+                    </div>
+                    <div style="width:100%; background:rgba(255,255,255,0.05); height:12px; border-radius:6px; position:relative; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                        <div style="position:absolute; left:50%; top:0; width:1px; height:100%; background:rgba(255,255,255,0.3); z-index:2;"></div>
+                        <div style="
+                            position:absolute; 
+                            left:${isPos ? '50%' : (50 - (Math.abs(val) / 2)) + '%'}; 
+                            width:${Math.abs(val) / 2}%; 
+                            height:100%; 
+                            background:${isPos ? color : '#ff4d4d'}; 
+                            transition: width 0.5s ease;
+                        "></div>
+                    </div>
+                </div>
+            `;
+      };
+
+      let bioHtml = `<h3>Σημερινοί Βιορρυθμοί</h3><p style="font-size:12px; color:var(--muted);">Η κεντρική γραμμή αντιπροσωπεύει την ισορροπία (0%).</p>`;
+      bioHtml += createBar("Σωματικός (Ενέργεια)", p, "var(--good)");
+      bioHtml += createBar("Συναισθηματικός (Ψυχολογία)", e, "var(--accent)");
+      bioHtml += createBar("Πνευματικός (Διαύγεια)", i, "var(--warn)");
+
+      document.getElementById('bio-bars').innerHTML = bioHtml;
+
+      let forecast = `<h3>Μηνιαία Πρόβλεψη (Φεβρουάριος 2026)</h3>`;
+      forecast += `<p>Συνδυάζοντας τις διελεύσεις των πλανητών με τους προσωπικούς σας βιορρυθμούς, η περίοδος αυτή δείχνει:</p>`;
+
+      // Love
+      forecast += `<h4>❤️ Έρωτας & Σχέσεις</h4>`;
+      if (e > 40) forecast += `<p><b>Ευνοϊκή περίοδος:</b> Οι συναισθηματικοί σας βιορρυθμοί είναι σε ανοδική τροχιά. Η επικοινωνία με τον σύντροφο ή νέες γνωριμίες ευνοούνται από την αυξημένη σας ενσυναίσθηση.</p>`;
+      else if (e < -40) forecast += `<p><b>Προσοχή:</b> Η χαμηλή συναισθηματική φόρτιση (-${Math.abs(e).toFixed(0)}%) μπορεί να φέρει παρεξηγήσεις. Μην παίρνετε αποφάσεις εν θερμώ και δείξτε κατανόηση.</p>`;
+      else forecast += `<p>Μια περίοδος σταθερότητας. Η Αφροδίτη σας καλεί να εστιάσετε στην ποιότητα του χρόνου που περνάτε με αγαπημένα πρόσωπα.</p>`;
+
+      // Career
+      forecast += `<h4>💼 Εργασία & Καριέρα</h4>`;
+      if (i > 40) forecast += `<p><b>Δημιουργική Κορύφωση:</b> Η πνευματική σας διαύγεια βοηθά στην επίλυση σύνθετων προβλημάτων. Ιδανική στιγμή για στρατηγικό σχεδιασμό.</p>`;
+      else if (i < -40) forecast += `<p><b>Πνευματική Κούραση:</b> Η συγκέντρωση μπορεί να είναι δύσκολη. Αποφύγετε να υπογράψετε σημαντικά έγγραφα αν δεν τα ελέγξετε διπλά.</p>`;
+      else forecast += `<p>Συνεχίστε την προσπάθεια. Οι πλανητικές όψεις στον 10ο οίκο δείχνουν ευκαιρίες για αναγνώριση μέσω της συνέπειας.</p>`;
+
+      // Energy
+      forecast += `<h4>⚡ Ενέργεια & Υγεία</h4>`;
+      if (p > 40) forecast += `<p><b>Δυναμισμός:</b> Το σώμα σας ανταποκρίνεται τέλεια στην κούραση. Εκμεταλλευτείτε τη ζωτικότητά σας για σωματική δράση.</p>`;
+      else if (p < -40) forecast += `<p><b>Χαμηλοί Τόνοι:</b> Το σωματικό σας απόθεμα είναι περιορισμένο. Η ξεκούραση δεν είναι πολυτέλεια, αλλά ανάγκη αυτή τη στιγμή.</p>`;
+      else forecast += `<p>Διατηρήστε μια καλή ρουτίνα ύπνου και διατροφής. Η ενέργειά σας βρίσκεται σε επίπεδα συντήρησης.</p>`;
+
+      document.getElementById('out-forecast').innerHTML = forecast;
+    }
+
+    function exportPDF() {
+      const element = document.getElementById('out-reports');
+      const originalStyle = element.style.cssText;
+
+      // Solid High Contrast for Search Engines and PDFs
+      element.style.background = "#ffffff";
+      element.style.color = "#000000";
+      element.style.padding = "40px";
+
+      const titles = element.querySelectorAll('h3, h4');
+      titles.forEach(t => {
+        t.style.color = "#000000";
+        t.style.borderBottom = "1px solid #ccc";
+      });
+      const texts = element.querySelectorAll('p, b');
+      texts.forEach(t => t.style.color = "#000000");
+
+      const opt = {
+        margin: 10,
+        filename: 'Astrology-Report-GR.pdf',
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      const out = document.getElementById('status');
+      out.innerText = "Δημιουργία εγγράφου υψηλής πιστότητας...";
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.style.cssText = originalStyle;
+        out.innerText = "Το PDF κατέβηκε επιτυχώς.";
+      });
+    }
+
+    function drawWheel(planets, houses) {
+      const svg = document.getElementById('astroWheel');
+      svg.innerHTML = '';
+      const cx = 250, cy = 250, r = 230, ir = 180;
+
+      // Background & Signs
+      for (let i = 0; i < 12; i++) {
+        let ang = i * 30 - 90; // Starting from Top
+        let x1 = cx + r * Math.cos(ang * Math.PI / 180);
+        let y1 = cy + r * Math.sin(ang * Math.PI / 180);
+        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", cx); line.setAttribute("y1", cy); line.setAttribute("x2", x1); line.setAttribute("y2", y1);
+        line.setAttribute("stroke", "rgba(255,255,255,0.1)");
+        svg.appendChild(line);
+      }
+
+      // Planets
+      planets.forEach(p => {
+        let ang = (p.lon - houses.asc) * -1 + 180;
+        let x = cx + ir * Math.cos(ang * Math.PI / 180);
+        let y = cy + ir * Math.sin(ang * Math.PI / 180);
+        let c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", 5); c.setAttribute("fill", "var(--accent)");
+        svg.appendChild(c);
+        let t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        t.setAttribute("x", x); t.setAttribute("y", y - 8); t.setAttribute("fill", "white"); t.setAttribute("font-size", "10");
+        t.setAttribute("text-anchor", "middle"); t.textContent = p.name;
+        svg.appendChild(t);
+      });
+    }
+
+    function fillDemo() {
+      document.getElementById('d1').value = "1988-09-19";
+      document.getElementById('t1').value = "05:37";
+      document.getElementById('lat1').value = "37.98";
+      document.getElementById('lon1').value = "23.72";
+      if (currentMode === 'synastry') {
+        document.getElementById('d2').value = "1990-05-10";
+        document.getElementById('t2').value = "14:20";
+      }
+      calculate();
+    }
+  </script>
+</body>
+
+</html>
